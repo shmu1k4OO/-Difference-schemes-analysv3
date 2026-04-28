@@ -1,3 +1,5 @@
+from math import gamma
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -43,7 +45,7 @@ def exact_solution(x, t, u0_func):
     return u0_func(x - c * t)
 
 
-def implicit_left_corner(u, tau, h, c, t=None, u0_func=None):
+def implicit_left_corner(u, tau, h, c, t=None, u0_func=None, flag=False):
     
     N = len(u) - 1
     sigma = c * tau / h
@@ -63,27 +65,29 @@ def implicit_left_corner(u, tau, h, c, t=None, u0_func=None):
     return u_new
 
 
-def box_scheme_thomas(u, tau, h, c, t=None, u0_func=None):
+def box_scheme_thomas(u, tau, h, c, t=None, u0_func=None, flag=False):
     
     N = len(u) - 1
-    gamma = c * tau / (2 * h)
+    Beta = 1/2 + c * tau / (2 * h)
+    Alpha = 1/2 - c * tau / (2 * h)
     
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристика)
-    if u0_func is not None and t is not None:
-        u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
+    if u0_func is not None:
+        if flag == True:
+            u_new[0] = u0_func(-c * (t + tau))
+        else:
+            u_new[0] = u[0]
     else:
         u_new[0] = u[0]
     
-    # Явный расчёт остальных точек
     for i in range(1, N + 1):
-        u_new[i] = (gamma * u_new[i-1] + (1 - gamma) * u[i] + gamma * u[i-1]) / (1 + gamma)
+        u_new[i] = (Alpha * u[i] + Beta * u[i-1] - Alpha * u_new[i-1]) / Beta
     
     return u_new
 
 
-def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, lam=10.0):
+def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, flag=False, lam=10.0):
     N = len(u) - 1
     gamma = c * tau / h
     u_new = np.zeros_like(u)
@@ -173,7 +177,7 @@ def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms
         line_Linf.set_data(t_history, Linf_history)
         line_L1.set_data(t_history, L1_history)
         
-        ax1.set_title(f"{title} – {scheme_name}, t = 0.00")
+        ax1.set_title(f"{title} – {scheme_name}")
         return line_num, line_exact, line_L2, line_Linf, line_L1
     
     def update(frame):
@@ -204,8 +208,7 @@ def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms
         ax2.relim()
         ax2.autoscale_view()
         
-        ax1.set_title(f"{title} – {scheme_name}, t = {t_cur:.2f} | "
-                     f"L₂={err_L2:.3e}, L∞={err_Linf:.3e}, L₁={err_L1:.3e}")
+        ax1.set_title(f"{title} – {scheme_name}")
         
         return line_num, line_exact, line_L2, line_Linf, line_L1
     
@@ -262,7 +265,7 @@ def run_convergence_experiment():
             t = 0.0
 
             for _ in range(Nt_cur):
-                u = scheme_func(u, tau_cur, h_cur, c_const, t, u0_smooth)
+                u = scheme_func(u, tau_cur, h_cur, c_const, t, u0_smooth, flag=True)
                 t += tau_cur
 
             u_exact = exact_solution(x_cur, t, u0_smooth)
@@ -274,10 +277,6 @@ def run_convergence_experiment():
         print("\nПорядки сходимости:")
         if len(errors_L2) >= 2:
             print("-" * 28)
-            # for k in range(1, len(errors_L2)):
-            #     p = np.log2(errors_L2[k-1] / errors_L2[k])
-            #     transition = f"{Nx_list[k-1]} → {Nx_list[k]}"
-            #     print(f"{transition:<16} {p:<10.3f}")
             for k in range(1, len(errors_L2)):
                 p = np.log2(errors_L2[k - 1] / errors_L2[k])
                 print(f"Порядки сходимости: {p:.2f}")
