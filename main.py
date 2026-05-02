@@ -56,13 +56,11 @@ def implicit_left_corner(u, tau, h, c, t=None, u0_func=None, flag=False):
     
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристика)
     if u0_func is not None and t is not None:
         u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
     else:
         u_new[0] = u[0]
     
-    # Явная формула
     for i in range(1, N + 1):
         u_new[i] = (sigma * u_new[i-1] + u[i]) / (1 + sigma)
     
@@ -96,7 +94,6 @@ def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, flag=False, lam=10.0):
     gamma = c * tau / h
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристическое)
     if u0_func is not None:
         u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
     else:
@@ -105,7 +102,6 @@ def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, flag=False, lam=10.0):
     d1 = u[1:-1] - u[:-2]
     d2 = u[2:] - 2*u[1:-1] + u[:-2]
     
-    # Избегаем деления на ноль
     with np.errstate(divide='ignore', invalid='ignore'):
         smooth = np.abs(d2) <= lam * np.abs(d1)
         smooth = np.nan_to_num(smooth, False)
@@ -114,7 +110,6 @@ def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, flag=False, lam=10.0):
     
     u_new[1:-1] = u[1:-1] - gamma * d1 - 0.5 * sigma * (gamma - gamma**2) * d2
     
-    # Правое граничное условие (экстраполяция)
     u_new[N] = 2*u_new[N-1] - u_new[N-2]
     return u_new
 
@@ -132,7 +127,6 @@ def compute_error(u_cur, h, u_exact, name):
 
 
 def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
-    """Сохраняет график с несколькими временными слоями"""
     import os
     
     os.makedirs('figures', exist_ok=True)
@@ -140,7 +134,6 @@ def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
     u_cur = u0_func(x)
     t_cur = 0.0
     
-    # Моменты времени для сохранения
     save_times = [0, 1.25, 2.5, 3.75, 5.0]
     frames = [u_cur.copy()]
     times_actual = [0.0]
@@ -155,7 +148,6 @@ def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
                 times_actual.append(t_cur)
                 break
     
-    # Строим график
     plt.figure(figsize=(12, 6))
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
     linestyles = ['-', '--', '-.', ':', '-']
@@ -171,7 +163,7 @@ def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
     plt.grid(True, alpha=0.3)
     plt.xlim(0, L)
     
-    # Автоматическая подгонка y-lim
+
     y_min = min(np.min(frame) for frame in frames)
     y_max = max(np.max(frame) for frame in frames)
     plt.ylim(y_min - 0.1, y_max + 0.1)
@@ -182,12 +174,10 @@ def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
     print(f'Сохранён график: {filename}')
 
 def save_comparison_frame(t_target=2.5):
-    """Сохраняет сравнительный график всех трёх схем в один момент времени"""
     import os
     
     os.makedirs('figures', exist_ok=True)
-    
-    # Соответствие: схема → задача
+
     schemes_tasks = [
         (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
         (box_scheme_thomas, u0_B, "Схема квадрат", "B"),
@@ -201,12 +191,10 @@ def save_comparison_frame(t_target=2.5):
         u_cur = u0_func(x)
         t_cur = 0.0
         
-        # Достигаем нужного момента времени
         while t_cur < t_target - tau/2:
             u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
             t_cur += tau
         
-        # Точное решение для этой задачи
         u_exact = exact_solution(x, t_cur, u0_func)
         
         plt.plot(x, u_cur, color=color, linewidth=2, 
@@ -227,17 +215,14 @@ def save_comparison_frame(t_target=2.5):
 
 
 def generate_all_figures():
-    """Генерирует все графики для отчёта"""
-    print("Генерация графиков для отчёта...")
     
-    # Соответствие: схема → задача
+    
     schemes_tasks = [
         (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
         (box_scheme_thomas, u0_B_rectangle, "Схема квадрат_острый импульс", "B"),
         (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
     ]
     
-    # Генерация эволюционных графиков
     for scheme_func, u0_func, scheme_name, task_letter in schemes_tasks:
         print(f"  Эволюция: {scheme_name} (задача {task_letter})")
         try:
@@ -246,9 +231,7 @@ def generate_all_figures():
             print(f"    Ошибка: {e}")
     
 
-# ============================================================
-# Анимация
-# ============================================================
+
 def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms=100):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), 
                                     gridspec_kw={'height_ratios': [2, 1]})
@@ -303,7 +286,6 @@ def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms
     def update(frame):
         nonlocal u_cur, t_cur
         
-        # Передаём t_cur и u0_func для схем, которым это нужно
         u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
         t_cur += tau
         
