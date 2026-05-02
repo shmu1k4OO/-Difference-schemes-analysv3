@@ -1,5 +1,4 @@
 from math import gamma
-
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
@@ -12,7 +11,7 @@ x = np.linspace(0, L, Nx + 1)
 
 c = 1.0
 T_max = 5.0
-tau = 0.9 * h / c
+tau = 0.7 * h / c
 Nt = int(T_max / tau) + 1
 
 a_val = 2.0
@@ -40,6 +39,11 @@ def u0_C(x):
         val[cond2] = (2/3) * (x[cond2] - l12) / (l2 - l12)
     return val
 
+def u0_B_rectangle(x):
+    cond = (x >= l1) & (x <= l2)
+    val = np.zeros_like(x)
+    val[cond] = 0.5
+    return val
 
 def exact_solution(x, t, u0_func):
     return u0_func(x - c * t)
@@ -125,6 +129,122 @@ def compute_error(u_cur, h, u_exact, name):
     
     elif name == "L1":
         return h * np.sum(np.abs(diff))
+
+
+def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
+    """Сохраняет график с несколькими временными слоями"""
+    import os
+    
+    os.makedirs('figures', exist_ok=True)
+    
+    u_cur = u0_func(x)
+    t_cur = 0.0
+    
+    # Моменты времени для сохранения
+    save_times = [0, 1.25, 2.5, 3.75, 5.0]
+    frames = [u_cur.copy()]
+    times_actual = [0.0]
+    
+    for step in range(1, Nt):
+        u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
+        t_cur += tau
+        
+        for save_t in save_times[1:]:
+            if abs(t_cur - save_t) < tau/2 and len(times_actual) < len(save_times):
+                frames.append(u_cur.copy())
+                times_actual.append(t_cur)
+                break
+    
+    # Строим график
+    plt.figure(figsize=(12, 6))
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    linestyles = ['-', '--', '-.', ':', '-']
+    
+    for i, (frame, t) in enumerate(zip(frames, times_actual)):
+        plt.plot(x, frame, color=colors[i], linestyle=linestyles[i], 
+                linewidth=1.5, label=f't = {t:.2f}')
+    
+    plt.xlabel('x', fontsize=12)
+    plt.ylabel('u', fontsize=12)
+    plt.title(f'{scheme_name}\nЗадача {task_name} — эволюция профиля', fontsize=14)
+    plt.legend(loc='upper right', fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, L)
+    
+    # Автоматическая подгонка y-lim
+    y_min = min(np.min(frame) for frame in frames)
+    y_max = max(np.max(frame) for frame in frames)
+    plt.ylim(y_min - 0.1, y_max + 0.1)
+    
+    filename = f'figures/{scheme_name}_evolution.png'
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f'Сохранён график: {filename}')
+
+def save_comparison_frame(t_target=2.5):
+    """Сохраняет сравнительный график всех трёх схем в один момент времени"""
+    import os
+    
+    os.makedirs('figures', exist_ok=True)
+    
+    # Соответствие: схема → задача
+    schemes_tasks = [
+        (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
+        (box_scheme_thomas, u0_B, "Схема квадрат", "B"),
+        (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
+    ]
+    
+    plt.figure(figsize=(12, 6))
+    colors = ['blue', 'green', 'red']
+    
+    for (scheme_func, u0_func, scheme_name, task_letter), color in zip(schemes_tasks, colors):
+        u_cur = u0_func(x)
+        t_cur = 0.0
+        
+        # Достигаем нужного момента времени
+        while t_cur < t_target - tau/2:
+            u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
+            t_cur += tau
+        
+        # Точное решение для этой задачи
+        u_exact = exact_solution(x, t_cur, u0_func)
+        
+        plt.plot(x, u_cur, color=color, linewidth=2, 
+                label=f'{scheme_name} (задача {task_letter})')
+        plt.plot(x, u_exact, color=color, linestyle='--', linewidth=1, alpha=0.5)
+    
+    plt.xlabel('x', fontsize=12)
+    plt.ylabel('u', fontsize=12)
+    plt.title(f'Сравнение схем в момент времени t = {t_target}', fontsize=14)
+    plt.legend(loc='upper right', fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, L)
+    
+    filename = f'figures/comparison_t{t_target}.png'
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f'Сохранён сравнительный график: {filename}')
+
+
+def generate_all_figures():
+    """Генерирует все графики для отчёта"""
+    print("Генерация графиков для отчёта...")
+    
+    # Соответствие: схема → задача
+    schemes_tasks = [
+        (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
+        (box_scheme_thomas, u0_B, "Схема квадрат", "B"),
+        (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
+    ]
+    
+    # Генерация эволюционных графиков
+    for scheme_func, u0_func, scheme_name, task_letter in schemes_tasks:
+        print(f"  Эволюция: {scheme_name} (задача {task_letter})")
+        try:
+            save_evolution_frames(scheme_func, u0_func, scheme_name, task_letter)
+        except Exception as e:
+            print(f"    Ошибка: {e}")
+    
 
 # ============================================================
 # Анимация
@@ -292,6 +412,11 @@ if __name__ == "__main__":
         run_convergence_experiment()
         sys.exit(0)
 
+    if len(sys.argv) > 1 and sys.argv[1] == 'figures':
+        generate_all_figures()
+        sys.exit(0)
+        
+
     print("=" * 60)
     print(f"Параметры: L={L}, Nx={Nx}, c={c}, T_max={T_max}")
     print(f"h={h:.4f}, τ={tau:.4f}, CFL={c*tau/h:.3f}")
@@ -301,9 +426,14 @@ if __name__ == "__main__":
     
     ani_A = animate_scheme_with_error(implicit_left_corner, u0_A, 
                                        "Условие A", "Неявный левый уголок", delay)
-    ani_B = animate_scheme_with_error(box_scheme_thomas, u0_B, 
+    ani_B = animate_scheme_with_error(box_scheme_thomas, u0_B_rectangle, 
                                        "Условие B", "Схема квадрат", delay)
     ani_C = animate_scheme_with_error(fedorenko_scheme_vectorized, u0_C, 
                                        "Условие C", "Схема Федоренко", delay)
-    
     plt.show()
+    save_gif = input("Сохранить анимации в GIF? (y/n): ").lower()
+    if save_gif == 'y':
+        ani_A.save("anim_A_implicit_left.gif", writer=PillowWriter(fps=1000//delay))
+        ani_B.save("anim_B_square.gif", writer=PillowWriter(fps=1000//delay))
+        ani_C.save("anim_C_fedorenko.gif", writer=PillowWriter(fps=1000//delay))
+        

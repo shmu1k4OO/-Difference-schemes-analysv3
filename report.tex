@@ -1,0 +1,126 @@
+\documentclass[12pt]{article}
+\usepackage[russian]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}     % добавлен для \includegraphics
+\usepackage{float}        % добавлен для [H]
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{geometry}
+\geometry{a4paper, top=2cm, bottom=2cm, left=2cm, right=2cm}
+
+\begin{document}
+
+\centerline{\bf Зарипов Ленар А-14-23}
+\centerline{\bf Лабораторная работа 3-4}
+\centerline{\bf Вариант 7}
+
+\medskip
+\section*{Введение}
+
+В данной работе рассматривается численное решение линейного уравнения переноса
+
+\[
+u_t + c u_x = 0, \qquad c > 0,
+\]
+
+с начальными условиями различного типа (задачи А, Б, Ц). Уравнение описывает перенос профиля начального распределения $u^0(x)$ вдоль оси $x$ со скоростью $c$ без изменения формы. Точное решение задачи Коши имеет вид
+
+\[
+u(x,t) = u^0(x - ct).
+\]
+
+\subsection*{Постановка задач}
+
+Рассматриваются три начальных условия:
+
+\textbf{Задача А (ступенька):}
+\[
+u^0(x) = \begin{cases} 
+a, & x \le 0, \\
+b, & x > 0,
+\end{cases} \qquad a > 0,\; b > 0.
+\]
+
+\textbf{Задача Б:}
+\[
+u^0(x) = \begin{cases}
+\dfrac12\left(1 - \cos\dfrac{2\pi(x-l_1)}{l_2 - l_1}\right), & x \in [l_1, l_2], \\[8pt]
+0, & x \notin [l_1, l_2],
+\end{cases} \qquad l_2 > l_1 > 0.
+\]
+
+\textbf{Задача Ц:}
+\[
+u^0(x) = \begin{cases}
+1 - \dfrac23\cdot\dfrac{x - l_1}{l_{12} - l_1}, & x \in [l_1, l_{12}], \\[10pt]
+\dfrac23\cdot\dfrac{l_2 - x}{l_2 - l_{12}}, & x \in [l_{12}, l_2], \\[6pt]
+0, & x \notin [l_1, l_2],
+\end{cases} \qquad l_2 > l_{12} > l_1 > 0.
+\]
+
+\medskip
+
+\textbf{Базовые параметры:}
+\begin{itemize}
+\item скорость переноса $c = 1$;
+\item шаг по пространству $h = 0.05$ (при $L = 10$, $N_x = 200$);
+\item число Куранта $\gamma = c\tau/h$, которое варьируется изменением шага по времени $\tau$ (в работе использовал 0.7);
+\item расчётная область $x \in [0, L]$ с $L = 10$;
+\item время моделирования $T_{\max} = 5$.
+\end{itemize}
+
+\subsection*{Разностные схемы}
+
+В работе исследуются три разностные схемы. Обозначения:
+\[
+\hat{y} = y_n^{j+1},\quad \check{y} = y_n^{j-1},\quad y_+ = y_{n+1}^j,\quad y_- = y_{n-1}^j,
+\]
+
+\medskip
+
+\textbf{Схема 1: Неявный левый уголок}
+\[
+\frac{\hat{y} - y}{\tau} + c\,\frac{\hat{y} - \hat{y}_-}{h} = 0.
+\]
+Схема безусловно устойчива, имеет первый порядок аппроксимации $O(\tau + h)$.
+
+\medskip
+
+\textbf{Схема 2: Квадрат}
+\[
+\frac{\hat{y}_+ + \hat{y} - y_+ - y}{\tau} + c\,\frac{\hat{y}_+ + y_+ - \hat{y} - y}{h} = 0.
+\]
+Схема безусловно устойчива, имеет второй порядок аппроксимации $O(\tau^2 + h^2)$.
+
+\medskip
+
+\textbf{Схема 3: Федоренко Р.П.}
+\[
+\hat{y} = y - \gamma(y - y_-) - \frac{\sigma}{2}(\gamma - \gamma^2)(y_+ - 2y + y_-),
+\]
+\[
+\sigma = \begin{cases}
+1, & |y_+ - 2y + y_-| < \lambda |y - y_-|, \\
+0, & |y_+ - 2y + y_-| \ge \lambda |y - y_-|,
+\end{cases}
+\]
+где $\lambda$ — экспериментально подбираемый параметр (в работе использовал $\lambda = 10$).
+
+\bigskip
+
+Далее в разделах представлены результаты численных экспериментов для каждой из трёх схем.
+
+\subsection*{Неявный левый уголок (задача А)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/Неявный левый уголок_evolution.png}
+    \caption{Эволюция решения схемы неявный левый уголок для задачи А в моменты времени 
+             $t = 0$, $1.25$, $2.5$, $3.75$, $5.0$}
+    \label{fig:implicit_left_evolution}
+\end{figure}
+
+\end{document}
