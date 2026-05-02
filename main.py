@@ -434,6 +434,6 @@ if __name__ == "__main__":
     save_gif = input("Сохранить анимации в GIF? (y/n): ").lower()
     if save_gif == 'y':
         ani_A.save("anim_A_implicit_left.gif", writer=PillowWriter(fps=1000//delay))
-        ani_B.save("anim_B_square.gif", writer=PillowWriter(fps=1000//delay))
+        ani_B.save("anim_B_square_rectangle.gif", writer=PillowWriter(fps=1000//delay))
         ani_C.save("anim_C_fedorenko.gif", writer=PillowWriter(fps=1000//delay))
         

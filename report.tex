@@ -2,8 +2,9 @@
 \usepackage[russian]{babel}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{graphicx}     % добавлен для \includegraphics
-\usepackage{float}        % добавлен для [H]
+\usepackage{graphicx}     
+\usepackage{float}   
+\usepackage{hyperref}     
 
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -122,5 +123,44 @@ u^0(x) = \begin{cases}
              $t = 0$, $1.25$, $2.5$, $3.75$, $5.0$}
     \label{fig:implicit_left_evolution}
 \end{figure}
+
+\begin{itemize}
+    \item \href{https://raw.githubusercontent.com/shmu1k4OO/-Difference-schemes-analysv3/debugging/anim_A_implicit_left.gif}{anim\_A\_implicit\_left.gif}
+\end{itemize}
+
+Получили решение в виде размазанной ступеньки. Штриховой линией показаны графики численного решения в разные моменты времени t. В момент t = 0
+штриховая линия совпадает со сплошной(точное решение). Аналогичный результат был получен в пособии Какимзянова по численным методам.
+Схема монотонна, она сглаживает решение на разрывах, это можно четко проследить по профилю решения на графике. Пока перейдем к следующей схеме, а об экспериментальном порядке точности
+скажем в самом конце.
+
+
+\subsection*{Квадрат (задача Б)}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/Схема квадрат_evolution.png}
+    \caption{Эволюция решения схемы квадрат для задачи Б в моменты времени 
+             $t = 0$, $1.25$, $2.5$, $3.75$, $5.0$}
+    \label{fig:squre}
+\end{figure}
+
+\begin{itemize}
+    \item \href{https://raw.githubusercontent.com/shmu1k4OO/-Difference-schemes-analysv3/debugging/anim_B_square.gif}{anim\_A\_implicit\_left.gif}
+\end{itemize}
+
+
+
+
+
+
+
+
+\smallskip
+\subsection*{Экспериментальный порядок точности}
+
+
+
+
+
 
 \end{document}
