@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.22)  2 MAY 2026 21:44
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.3.22)  2 MAY 2026 22:36
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -602,30 +602,37 @@ File: figures/Схема квадрат_evolution.png Graphic file (type png)
 <use figures/Схема квадрат_evolution.png>
 Package pdftex.def Info: figures/Схема квадрат_evolution.png  used on input line 141.
 (pdftex.def)             Requested size: 435.32422pt x 245.48466pt.
- [3 <./figures/Схема квадрат_evolution.png>] (report.aux)
+<figures/Схема квадрат_острый импульс_evolution.png, id=35, 739.563pt x 412.9026pt>
+File: figures/Схема квадрат_острый импульс_evolution.png Graphic file (type png)
+<use figures/Схема квадрат_острый импульс_evolution.png>
+Package pdftex.def Info: figures/Схема квадрат_острый импульс_evolution.png  used on input line 158.
+(pdftex.def)             Requested size: 435.32422pt x 243.04968pt.
+ [3 <./figures/Схема квадрат_evolution.png>]
+<figures/Схема Федоренко_evolution.png, id=44, 731.3724pt x 412.4208pt>
+File: figures/Схема Федоренко_evolution.png Graphic file (type png)
+<use figures/Схема Федоренко_evolution.png>
+Package pdftex.def Info: figures/Схема Федоренко_evolution.png  used on input line 175.
+(pdftex.def)             Requested size: 435.32422pt x 245.48466pt.
+ [4 <./figures/Схема квадрат_острый импульс_evolution.png> <./figures/Схема Федоренко_evolution.png>] [5] [6] (report.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 12294 strings out of 467871
- 187012 string characters out of 5419344
- 618977 words of memory out of 5000000
- 41012 multiletter control sequences out of 15000+600000
+ 12331 strings out of 467871
+ 188336 string characters out of 5419344
+ 621757 words of memory out of 5000000
+ 41037 multiletter control sequences out of 15000+600000
  638337 words of font info for 66 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,13n,79p,462b,473s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,13n,79p,462b,534s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\4OO\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1200.pk> <C:\Users\4OO\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\labx1440.pk> <C:\Users\4OO\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\larm1200.pk> <C:\Users\4OO\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\labx1728.pk> <C:\Users\4OO\AppData\Local\MiKTeX\fonts/pk/ljfour/lh/lh-t2a/dpi600\labx1200.pk><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/4OO/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
-Output written on c:/Unik\Data_Science\-Difference-schemes-analysv3\report.pdf (3 pages, 287712 bytes).
+Output written on c:/Unik\Data_Science\-Difference-schemes-analysv3\report.pdf (6 pages, 524203 bytes).
 PDF statistics:
- 249 PDF objects out of 1000 (max. 8388607)
- 12 named destinations out of 1000 (max. 500000)
- 11 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 298 PDF objects out of 1000 (max. 8388607)
+ 24 named destinations out of 1000 (max. 500000)
+ 21 words of extra memory for PDF output out of 10000 (max. 10000000)
 

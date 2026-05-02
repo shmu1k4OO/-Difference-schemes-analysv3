@@ -233,7 +233,7 @@ def generate_all_figures():
     # Соответствие: схема → задача
     schemes_tasks = [
         (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
-        (box_scheme_thomas, u0_B, "Схема квадрат", "B"),
+        (box_scheme_thomas, u0_B_rectangle, "Схема квадрат_острый импульс", "B"),
         (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
     ]
     
