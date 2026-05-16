@@ -2,6 +2,7 @@ from math import gamma
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
+import os
 
 
 L = 10.0
@@ -127,7 +128,6 @@ def compute_error(u_cur, h, u_exact, name):
 
 
 def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
-    import os
     
     os.makedirs('figures', exist_ok=True)
     
@@ -174,7 +174,6 @@ def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
     print(f'Сохранён график: {filename}')
 
 def save_comparison_frame(t_target=2.5):
-    import os
     
     os.makedirs('figures', exist_ok=True)
 
