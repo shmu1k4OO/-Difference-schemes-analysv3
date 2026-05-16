@@ -1,1 +1,9 @@
-# -Difference-schemes-analysv3
+# Difference-schemes-analysis v3
+
+## Режимы работы
+
+- `main.py` — анимации решения + сохранение GIF
+
+- `main.py experiment` — численный эксперимент на гладком решении для определения порядков сходимости
+
+- `main.py figures` — сохранение графиков решений в разные моменты времени

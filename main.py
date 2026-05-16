@@ -1,6 +1,8 @@
+from math import gamma
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
+import os
 
 
 L = 10.0
@@ -10,7 +12,7 @@ x = np.linspace(0, L, Nx + 1)
 
 c = 1.0
 T_max = 5.0
-tau = 0.9 * h / c
+tau = 0.7 * h / c
 Nt = int(T_max / tau) + 1
 
 a_val = 2.0
@@ -38,57 +40,61 @@ def u0_C(x):
         val[cond2] = (2/3) * (x[cond2] - l12) / (l2 - l12)
     return val
 
+def u0_B_rectangle(x):
+    cond = (x >= l1) & (x <= l2)
+    val = np.zeros_like(x)
+    val[cond] = 0.5
+    return val
 
 def exact_solution(x, t, u0_func):
     return u0_func(x - c * t)
 
 
-def implicit_left_corner(u, tau, h, c, t=None, u0_func=None):
+def implicit_left_corner(u, tau, h, c, t=None, u0_func=None, flag=False):
     
     N = len(u) - 1
     sigma = c * tau / h
     
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристика)
     if u0_func is not None and t is not None:
         u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
     else:
         u_new[0] = u[0]
     
-    # Явная формула
     for i in range(1, N + 1):
         u_new[i] = (sigma * u_new[i-1] + u[i]) / (1 + sigma)
     
     return u_new
 
 
-def box_scheme_thomas(u, tau, h, c, t=None, u0_func=None):
+def box_scheme_thomas(u, tau, h, c, t=None, u0_func=None, flag=False):
     
     N = len(u) - 1
-    gamma = c * tau / (2 * h)
+    Beta = 1/2 + c * tau / (2 * h)
+    Alpha = 1/2 - c * tau / (2 * h)
     
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристика)
-    if u0_func is not None and t is not None:
-        u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
+    if u0_func is not None:
+        if flag == True:
+            u_new[0] = u0_func(-c * (t + tau))
+        else:
+            u_new[0] = u[0]
     else:
         u_new[0] = u[0]
     
-    # Явный расчёт остальных точек
     for i in range(1, N + 1):
-        u_new[i] = (gamma * u_new[i-1] + (1 - gamma) * u[i] + gamma * u[i-1]) / (1 + gamma)
+        u_new[i] = (Alpha * u[i] + Beta * u[i-1] - Alpha * u_new[i-1]) / Beta
     
     return u_new
 
 
-def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, lam=10.0):
+def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, flag=False, lam=10.0):
     N = len(u) - 1
     gamma = c * tau / h
     u_new = np.zeros_like(u)
     
-    # Левое граничное условие (характеристическое)
     if u0_func is not None:
         u_new[0] = u0_func(np.array([-c * (t + tau)]))[0]
     else:
@@ -97,7 +103,6 @@ def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, lam=10.0):
     d1 = u[1:-1] - u[:-2]
     d2 = u[2:] - 2*u[1:-1] + u[:-2]
     
-    # Избегаем деления на ноль
     with np.errstate(divide='ignore', invalid='ignore'):
         smooth = np.abs(d2) <= lam * np.abs(d1)
         smooth = np.nan_to_num(smooth, False)
@@ -106,7 +111,6 @@ def fedorenko_scheme_vectorized(u, tau, h, c, t, u0_func, lam=10.0):
     
     u_new[1:-1] = u[1:-1] - gamma * d1 - 0.5 * sigma * (gamma - gamma**2) * d2
     
-    # Правое граничное условие (экстраполяция)
     u_new[N] = 2*u_new[N-1] - u_new[N-2]
     return u_new
 
@@ -122,9 +126,111 @@ def compute_error(u_cur, h, u_exact, name):
     elif name == "L1":
         return h * np.sum(np.abs(diff))
 
-# ============================================================
-# Анимация
-# ============================================================
+
+def save_evolution_frames(scheme_func, u0_func, scheme_name, task_name):
+    
+    os.makedirs('figures', exist_ok=True)
+    
+    u_cur = u0_func(x)
+    t_cur = 0.0
+    
+    save_times = [0, 1.25, 2.5, 3.75, 5.0]
+    frames = [u_cur.copy()]
+    times_actual = [0.0]
+    
+    for step in range(1, Nt):
+        u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
+        t_cur += tau
+        
+        for save_t in save_times[1:]:
+            if abs(t_cur - save_t) < tau/2 and len(times_actual) < len(save_times):
+                frames.append(u_cur.copy())
+                times_actual.append(t_cur)
+                break
+    
+    plt.figure(figsize=(12, 6))
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    linestyles = ['-', '--', '-.', ':', '-']
+    
+    for i, (frame, t) in enumerate(zip(frames, times_actual)):
+        plt.plot(x, frame, color=colors[i], linestyle=linestyles[i], 
+                linewidth=1.5, label=f't = {t:.2f}')
+    
+    plt.xlabel('x', fontsize=12)
+    plt.ylabel('u', fontsize=12)
+    plt.title(f'{scheme_name}\nЗадача {task_name} — эволюция профиля', fontsize=14)
+    plt.legend(loc='upper right', fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, L)
+    
+
+    y_min = min(np.min(frame) for frame in frames)
+    y_max = max(np.max(frame) for frame in frames)
+    plt.ylim(y_min - 0.1, y_max + 0.1)
+    
+    filename = f'figures/{scheme_name}_evolution.png'
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f'Сохранён график: {filename}')
+
+def save_comparison_frame(t_target=2.5):
+    
+    os.makedirs('figures', exist_ok=True)
+
+    schemes_tasks = [
+        (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
+        (box_scheme_thomas, u0_B, "Схема квадрат", "B"),
+        (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
+    ]
+    
+    plt.figure(figsize=(12, 6))
+    colors = ['blue', 'green', 'red']
+    
+    for (scheme_func, u0_func, scheme_name, task_letter), color in zip(schemes_tasks, colors):
+        u_cur = u0_func(x)
+        t_cur = 0.0
+        
+        while t_cur < t_target - tau/2:
+            u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
+            t_cur += tau
+        
+        u_exact = exact_solution(x, t_cur, u0_func)
+        
+        plt.plot(x, u_cur, color=color, linewidth=2, 
+                label=f'{scheme_name} (задача {task_letter})')
+        plt.plot(x, u_exact, color=color, linestyle='--', linewidth=1, alpha=0.5)
+    
+    plt.xlabel('x', fontsize=12)
+    plt.ylabel('u', fontsize=12)
+    plt.title(f'Сравнение схем в момент времени t = {t_target}', fontsize=14)
+    plt.legend(loc='upper right', fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.xlim(0, L)
+    
+    filename = f'figures/comparison_t{t_target}.png'
+    plt.savefig(filename, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f'Сохранён сравнительный график: {filename}')
+
+
+def generate_all_figures():
+    
+    
+    schemes_tasks = [
+        (implicit_left_corner, u0_A, "Неявный левый уголок", "A"),
+        (box_scheme_thomas, u0_B_rectangle, "Схема квадрат_острый импульс", "B"),
+        (fedorenko_scheme_vectorized, u0_C, "Схема Федоренко", "C"),
+    ]
+    
+    for scheme_func, u0_func, scheme_name, task_letter in schemes_tasks:
+        print(f"  Эволюция: {scheme_name} (задача {task_letter})")
+        try:
+            save_evolution_frames(scheme_func, u0_func, scheme_name, task_letter)
+        except Exception as e:
+            print(f"    Ошибка: {e}")
+    
+
+
 def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms=100):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), 
                                     gridspec_kw={'height_ratios': [2, 1]})
@@ -173,13 +279,12 @@ def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms
         line_Linf.set_data(t_history, Linf_history)
         line_L1.set_data(t_history, L1_history)
         
-        ax1.set_title(f"{title} – {scheme_name}, t = 0.00")
+        ax1.set_title(f"{title} – {scheme_name}")
         return line_num, line_exact, line_L2, line_Linf, line_L1
     
     def update(frame):
         nonlocal u_cur, t_cur
         
-        # Передаём t_cur и u0_func для схем, которым это нужно
         u_cur = scheme_func(u_cur, tau, h, c, t_cur, u0_func)
         t_cur += tau
         
@@ -204,8 +309,7 @@ def animate_scheme_with_error(scheme_func, u0_func, title, scheme_name, delay_ms
         ax2.relim()
         ax2.autoscale_view()
         
-        ax1.set_title(f"{title} – {scheme_name}, t = {t_cur:.2f} | "
-                     f"L₂={err_L2:.3e}, L∞={err_Linf:.3e}, L₁={err_L1:.3e}")
+        ax1.set_title(f"{title} – {scheme_name}")
         
         return line_num, line_exact, line_L2, line_Linf, line_L1
     
@@ -262,7 +366,7 @@ def run_convergence_experiment():
             t = 0.0
 
             for _ in range(Nt_cur):
-                u = scheme_func(u, tau_cur, h_cur, c_const, t, u0_smooth)
+                u = scheme_func(u, tau_cur, h_cur, c_const, t, u0_smooth, flag=True)
                 t += tau_cur
 
             u_exact = exact_solution(x_cur, t, u0_smooth)
@@ -274,10 +378,6 @@ def run_convergence_experiment():
         print("\nПорядки сходимости:")
         if len(errors_L2) >= 2:
             print("-" * 28)
-            # for k in range(1, len(errors_L2)):
-            #     p = np.log2(errors_L2[k-1] / errors_L2[k])
-            #     transition = f"{Nx_list[k-1]} → {Nx_list[k]}"
-            #     print(f"{transition:<16} {p:<10.3f}")
             for k in range(1, len(errors_L2)):
                 p = np.log2(errors_L2[k - 1] / errors_L2[k])
                 print(f"Порядки сходимости: {p:.2f}")
@@ -293,6 +393,11 @@ if __name__ == "__main__":
         run_convergence_experiment()
         sys.exit(0)
 
+    if len(sys.argv) > 1 and sys.argv[1] == 'figures':
+        generate_all_figures()
+        sys.exit(0)
+        
+
     print("=" * 60)
     print(f"Параметры: L={L}, Nx={Nx}, c={c}, T_max={T_max}")
     print(f"h={h:.4f}, τ={tau:.4f}, CFL={c*tau/h:.3f}")
@@ -302,9 +407,14 @@ if __name__ == "__main__":
     
     ani_A = animate_scheme_with_error(implicit_left_corner, u0_A, 
                                        "Условие A", "Неявный левый уголок", delay)
-    ani_B = animate_scheme_with_error(box_scheme_thomas, u0_B, 
+    ani_B = animate_scheme_with_error(box_scheme_thomas, u0_B_rectangle, 
                                        "Условие B", "Схема квадрат", delay)
     ani_C = animate_scheme_with_error(fedorenko_scheme_vectorized, u0_C, 
                                        "Условие C", "Схема Федоренко", delay)
-    
     plt.show()
+    save_gif = input("Сохранить анимации в GIF? (y/n): ").lower()
+    if save_gif == 'y':
+        ani_A.save("anim_A_implicit_left.gif", writer=PillowWriter(fps=1000//delay))
+        ani_B.save("anim_B_square_rectangle.gif", writer=PillowWriter(fps=1000//delay))
+        ani_C.save("anim_C_fedorenko.gif", writer=PillowWriter(fps=1000//delay))
+        
